@@ -8,3 +8,6 @@ I choose to learn Rust through these puzzles!
 1. Install rust: `curl https://sh.rustup.rs -sSf | sh`
 2. Go to the day you want to execute, eg: `cd day1`
 3. Run: `cargo run --quiet`
+
+## Thanks
+ - [BurntSushi](https://github.com/BurntSushi/advent-of-code)
