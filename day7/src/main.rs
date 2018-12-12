@@ -25,7 +25,7 @@ struct Worker {
     available_at: i32,
 }
 
-fn part1_get_next(steps: &HashMap<String, Step>, visited: &mut Vec<String>) -> Option<Step> {
+fn get_next(steps: &HashMap<String, Step>, visited: &mut Vec<String>) -> Option<Step> {
     let mut filtered_steps: Vec<&Step> = steps
         .iter()
         .map(|(_, step)| step)
@@ -47,7 +47,7 @@ fn part1(steps: &HashMap<String, Step>) {
     let mut steps = steps.clone();
 
     let mut visited = Vec::<String>::new();
-    while let Some(next) = part1_get_next(&steps, &mut visited) {
+    while let Some(next) = get_next(&steps, &mut visited) {
         print!("{}", next.name);
 
         for (name, step) in steps.clone().iter() {
@@ -126,7 +126,7 @@ fn part2(steps: &HashMap<String, Step>, workers_count: i32) {
                 }
             }
 
-            if let Some(next) = part1_get_next(&steps, &mut visited) {
+            if let Some(next) = get_next(&steps, &mut visited) {
                 worker.step_name = Some(next.name.clone());
                 worker.available_at = seconds + 60 + next.process_time;
             }
