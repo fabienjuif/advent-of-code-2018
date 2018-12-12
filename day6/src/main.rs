@@ -9,6 +9,7 @@ struct Point {
     y: i32,
     owner_id: i32,
     distance_from_owner: i32,
+    summed_distances: i32,
     visited: bool,
 }
 
@@ -18,11 +19,18 @@ impl Point {
     }
 }
 
-fn main() {
+fn create_grid (debug: bool) -> (Vec<Point>, Vec<i32>) {
     let content = fs::read_to_string(FILE_NAME).expect("Error reading input file.");
     let mut points = Vec::<Point>::new();
 
-    let mut bound = Point { x: 0, y: 0, owner_id: -1, distance_from_owner: -1, visited: false };
+    let mut bound = Point {
+        x: 0,
+        y: 0,
+        owner_id: -1,
+        distance_from_owner: -1,
+        visited: false,
+        summed_distances: 0,
+    };
 
     for (owner_id, line) in content.lines().enumerate() {
         let coords: Vec<&str> = line.split(", ").collect();
@@ -31,6 +39,7 @@ fn main() {
             owner_id: owner_id as i32,
             visited: true,
             distance_from_owner: 0, // this is the owner
+            summed_distances: 0,
             x: coords.get(0).unwrap().parse::<i32>().unwrap(),
             y: coords.get(1).unwrap().parse::<i32>().unwrap(),
         };
@@ -55,11 +64,14 @@ fn main() {
                 y,
                 owner_id: -1,
                 visited: false,
+                summed_distances: 0,
                 distance_from_owner: -1,
             };
 
             for point in points.as_slice() {
                 let distance = point.distance_to(&new_owned_point);
+
+                new_owned_point.summed_distances += distance;
 
                 if distance == new_owned_point.distance_from_owner {
                     new_owned_point.owner_id = -1;
@@ -85,8 +97,16 @@ fn main() {
         }
     }
 
+    if debug {
+        debug_grid(&grid, &bound);
+    }
+
+    (grid, owner_to_exclude)
+}
+
+fn part1(grid: &Vec<Point>, owner_to_exclude: &Vec<i32>) {
     let mut nb_points_by_owner = HashMap::<i32, i32>::new();
-    for point in grid.as_slice() {
+    for point in grid {
         if point.owner_id != -1 && !owner_to_exclude.contains(&point.owner_id) {
             *nb_points_by_owner.entry(point.owner_id).or_insert(0) += 1;
         }
@@ -99,27 +119,48 @@ fn main() {
         }
     }
 
-    println!("max: {}", max);
+    println!("{}", max);
+}
 
-    // let mut sorted_grid = grid.to_vec();
-    // sorted_grid.sort_by_key(|point| (-point.y, point.x));
+fn part2(grid: &Vec<Point>) {
+    let points_in_region = grid
+        .iter()
+        .filter(|point| point.summed_distances < 10000)
+        .count();
 
-    // println!("<div>");
-    // for (index, point) in sorted_grid.iter().enumerate() {
-    //     if index as f32 % (bound.x + 1) as f32 == 0.0 {
-    //         println!("</div><div class=\"line\">");
-    //     }
+    println!("{}", points_in_region);
+}
 
-    //     print!("\t<div class=\"cell cell-{} ", index);
-    //     if point.distance_from_owner == 0 {
-    //         print!("owner\">{}", point.owner_id);
-    //     } else if point.owner_id == -1 {
-    //         print!("nobody\">");
-    //     } else {
-    //         print!("owned\">{}", point.owner_id);
-    //     }
-    //     println!("</div>");
-    // }
+fn main() {
+    let (grid, owner_to_exclude) = create_grid(false);
 
-    // println!("</div>");
+    println!("--part 1--");
+    part1(&grid, &owner_to_exclude);
+
+    println!("--part 2--");
+    part2(&grid);
+}
+
+fn debug_grid(grid: &Vec<Point>, bound: &Point) {
+    let mut sorted_grid = grid.to_vec();
+    sorted_grid.sort_by_key(|point| (-point.y, point.x));
+
+    println!("<div>");
+    for (index, point) in sorted_grid.iter().enumerate() {
+        if index as f32 % (bound.x + 1) as f32 == 0.0 {
+            println!("</div><div class=\"line\">");
+        }
+
+        print!("\t<div class=\"cell cell-{} ", index);
+        if point.distance_from_owner == 0 {
+            print!("owner\">{}", point.owner_id);
+        } else if point.owner_id == -1 {
+            print!("nobody\">");
+        } else {
+            print!("owned\">{}", point.owner_id);
+        }
+        println!("</div>");
+    }
+
+    println!("</div>");
 }
