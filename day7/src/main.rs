@@ -64,24 +64,18 @@ fn main() -> Result<()> {
     }
 
     let mut visited = Vec::<String>::new();
-    loop {
-        match get_next(&steps, &visited) {
-            None => {
-                println!("");
-                return Ok(());
-            },
-            Some(next) => {
-                visited.push(next.name.clone());
-                print!("{}", next.name);
+    while let Some(next) = get_next(&steps, &visited) {
+        visited.push(next.name.clone());
+        print!("{}", next.name);
 
-                for (name, step) in steps.clone().iter() {
-                    if step.previous.contains(&next.name) {
-                        steps.get_mut(name).unwrap().previous.retain(|name| name != &next.name);
-                    }
-                }
+        for (name, step) in steps.clone().iter() {
+            if step.previous.contains(&next.name) {
+                steps.get_mut(name).unwrap().previous.retain(|name| name != &next.name);
             }
         }
     }
+
+    println!("");
 
     Ok(())
 }
