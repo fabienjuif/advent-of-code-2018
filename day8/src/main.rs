@@ -44,23 +44,47 @@ impl Node {
         self.metadatas_count == self.metadatas.len() as i32
     }
 
-    fn add_metadata (&mut self, metadata: i32, nodes: HashMap<i32, Node>) {
+    fn add_metadata (&mut self, metadata: i32) {
         self.metadatas.push(metadata);
+    }
 
-        if self.has_metadatas() {
-            self.value = self.metadatas.iter().fold(
-                0,
-                |acc, curr| {
-                    if self.childs_count == 0 {
-                        return acc + curr;
-                    }
-                    return acc + match self.childs.get(*curr as usize - 1) {
-                        None => 0,
-                        Some(child_id) => nodes.get(&child_id).unwrap().clone().value,
-                    }
+    fn get_value (&self, nodes: &HashMap<i32, Node>) -> i32 {
+        self.metadatas.iter().fold(
+            0,
+            |acc, curr| {
+                if self.childs_count == 0 {
+                    return acc + curr;
                 }
-            );
-        }
+                return acc + match self.childs.get(*curr as usize - 1) {
+                    None => 0,
+                    Some(child_id) => nodes.get(&child_id).unwrap().clone().value,
+                }
+            }
+        )
+    }
+}
+
+fn add_metadata(nodes: &mut HashMap<i32, Node>, id: &i32, metadata: i32) {
+    nodes.entry(*id)
+        .and_modify(|node| node.add_metadata(metadata));
+
+    let current_node = nodes.get(id).unwrap();
+    if current_node.has_metadatas() {
+        let value = current_node.get_value(&nodes);
+        nodes.entry(*id)
+            .and_modify(|node| node.value = value);
+    }
+}
+
+fn insert_and_update_parent(nodes: &mut HashMap<i32, Node>, node: Node) {
+    let id = node.id;
+    let parent = node.parent.clone();
+
+    nodes.insert(id.clone(), node);
+
+    if let Some(parent) = parent {
+        let parent_node = nodes.get_mut(&parent).unwrap();
+        parent_node.childs.push(id);
     }
 }
 
@@ -79,9 +103,7 @@ fn main() -> Result<()> {
             if parent_id.is_none() {
                 if index > 0 {
                     // back to parent node, we then parse metadatas
-                    let ref_nodes = nodes.clone();
-                    nodes.entry(current_id)
-                        .and_modify(|node| node.add_metadata(value, ref_nodes));
+                    add_metadata(&mut nodes, &current_id, value);
 
                     continue;
                 }
@@ -90,7 +112,7 @@ fn main() -> Result<()> {
                 current_id = id;
                 parent_id = Some(id);
 
-                nodes.insert(current_id, Node::create(id, value, None));
+                insert_and_update_parent(&mut nodes, Node::create(id, value, None));
 
                 continue;
             }
@@ -103,14 +125,9 @@ fn main() -> Result<()> {
                 parent_id = Some(current_id);
                 current_id = id;
 
-                nodes.insert(current_id, Node::create(id, value, parent_id));
-
-                nodes.entry(parent_id.unwrap())
-                    .and_modify(|node| node.childs.push(current_id));
+                insert_and_update_parent(&mut nodes, Node::create(id, value, parent_id));
             } else if !current_node.has_metadatas() { // parsing metadatas
-                let ref_nodes = nodes.clone();
-                nodes.entry(current_id)
-                    .and_modify(|node| node.add_metadata(value, ref_nodes));
+                add_metadata(&mut nodes, &current_id, value);
             } else { // metadatas parsed
                 let parent_node = nodes.get(&parent_id.unwrap()).unwrap().clone();
 
@@ -118,17 +135,12 @@ fn main() -> Result<()> {
                     current_id = parent_node.id;
                     parent_id = parent_node.parent;
 
-                    let ref_nodes = nodes.clone();
-                    nodes.entry(current_id)
-                        .and_modify(|node| node.add_metadata(value, ref_nodes));
+                    add_metadata(&mut nodes, &current_id, value);
                 } else { // sibling
                     current_id = id;
                     parent_id = current_node.parent;
 
-                    nodes.insert(current_id, Node::create(id, value, parent_id));
-
-                    nodes.entry(parent_id.unwrap())
-                        .and_modify(|node| node.childs.push(current_id));
+                    insert_and_update_parent(&mut nodes, Node::create(id, value, parent_id));
                 }
             }
         }
