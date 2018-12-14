@@ -1,6 +1,7 @@
 // I use i64 there because the scores are too damn high with part2
 // And with i32 it causes an overflow
 
+use fnv::FnvHashMap;
 use std::collections::HashMap;
 use std::fs;
 use regex::Regex;
@@ -23,7 +24,7 @@ struct Marble {
 #[derive(Default, Debug)]
 struct Playground {
     last_marble: i64,
-    marbles: HashMap<i64, Marble>,
+    marbles: FnvHashMap<i64, Marble>,
     current_marble: i64,
 }
 
@@ -32,7 +33,7 @@ impl Playground {
         Playground {
             last_marble,
             current_marble: -1,
-            ..Playground::default()
+            marbles: FnvHashMap::default(),
         }
     }
 
