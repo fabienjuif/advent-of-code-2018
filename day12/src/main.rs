@@ -12,7 +12,7 @@ fn print_score(pots: String, patterns: &[(&str, &str)], generations: i64) {
     let mut new_pots = String::from(pots.clone());
 
     let mut negative_offset = 0;
-    for _ in 0..generations {
+    for generation in 0..generations {
         // pushing values so pattern will work
         while !pots.starts_with(".....") {
             pots.insert_str(0, ".");
@@ -28,6 +28,10 @@ fn print_score(pots: String, patterns: &[(&str, &str)], generations: i64) {
             for b in new_pots.as_mut_vec() {
                 *b = '.' as u8;
             }
+        }
+
+        if generation % 500 == 0 {
+            println!("iters: {:?}", patterns.len() * (pots.len() - 5));
         }
 
         for pattern in patterns {
