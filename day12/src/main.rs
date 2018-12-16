@@ -34,14 +34,7 @@ fn print_score(pots: String, patterns: &[(&str, &str)], generations: i64) {
             for index in 0..pots.len()-5 {
                 if pots[index..index+5] == *pattern.0 {
                     unsafe {
-                        let mut byte_index = 0;
-                        for b in new_pots.as_mut_vec() {
-                            if byte_index == index + 2 {
-                                *b = '#' as u8;
-                                break;
-                            }
-                            byte_index += 1;
-                        }
+                        new_pots.as_mut_vec()[index + 2] = '#' as u8;
                     }
                 }
             }
