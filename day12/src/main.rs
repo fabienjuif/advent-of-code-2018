@@ -9,40 +9,57 @@ type Result<T> = result::Result<T, Box<Error>>;
 
 fn print_score(pots: String, patterns: &[(&str, &str)], generations: i64) {
     let mut pots = String::from(pots);
+    let mut new_pots = String::from(pots.clone());
 
     let mut negative_offset = 0;
     for _ in 0..generations {
         // pushing values so pattern will work
         while !pots.starts_with(".....") {
             pots.insert_str(0, ".");
+            new_pots.insert_str(0, ".");
             negative_offset += 1;
         }
         while !pots.ends_with(".....") {
             pots.push_str(".");
+            new_pots.push_str(".");
         }
 
-        let mut new_pots = ".".repeat(pots.len());
+        unsafe {
+            for b in new_pots.as_mut_vec() {
+                *b = '.' as u8;
+            }
+        }
 
-        patterns.iter()
-            .for_each(|pattern| {
-                for index in 0..pots.len()-5 {
-                    if pots[index..index+5] == *pattern.0 {
-                        new_pots.replace_range(index+2..index+3, pattern.1);
+        for pattern in patterns {
+            for index in 0..pots.len()-5 {
+                if pots[index..index+5] == *pattern.0 {
+                    unsafe {
+                        let mut byte_index = 0;
+                        for b in new_pots.as_mut_vec() {
+                            if byte_index == index + 2 {
+                                *b = '#' as u8;
+                                break;
+                            }
+                            byte_index += 1;
+                        }
                     }
                 }
-                // this was the older version
-                // but when I read the documenation (and read documentaiton because I was failing...)
-                // I saw that .match_indices doesn't handle overlaps
-                // So I made the previous version to handle that on my own
-                // ------------
-                // for (index, m) in pots.match_indices(pattern.0) {
-                //     println!("m: ({} -> {})", index, m);
-                //     new_pots.replace_range(index+2..index+3, pattern.1);
-                // }
-                // ------------
-            });
+            }
+            // this was the older version
+            // but when I read the documenation (and read documentaiton because I was failing...)
+            // I saw that .match_indices doesn't handle overlaps
+            // So I made the previous version to handle that on my own
+            // ------------
+            // for (index, m) in pots.match_indices(pattern.0) {
+            //     println!("m: ({} -> {})", index, m);
+            //     new_pots.replace_range(index+2..index+3, pattern.1);
+            // }
+            // ------------
+        }
 
+        let buffer = pots;
         pots = new_pots;
+        new_pots = buffer;
     }
 
     let mut score = 0;
