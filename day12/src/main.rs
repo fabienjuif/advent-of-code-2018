@@ -1,3 +1,6 @@
+
+// this code is not optimized, see some recommandations here: https://github.com/BurntSushi/advent-of-code/issues/10
+// you can see some tests I did here: https://github.com/fabienjuif/advent-of-code-2018/tree/day12_try_optims
 use std::fs;
 use std::result;
 use std::error::Error;
